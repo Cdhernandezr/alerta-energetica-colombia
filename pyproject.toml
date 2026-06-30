@@ -1,0 +1,12 @@
+[project]
+name = "alerta-energetica-colombia"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "duckdb>=1.5.4",
+    "jupyterlab>=4.6.0",
+    "pandas>=3.0.3",
+    "pydataxm>=0.3.17",
+]

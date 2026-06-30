@@ -1,0 +1,39 @@
+# Entorno virtual - nunca se sube
+.venv/
+
+# Python compilado
+__pycache__/
+*.py[oc]
+*.egg-info/
+build/
+dist/
+wheels/
+
+# Jupyter checkpoints
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# Base de datos local (puede pesar cientos de MB)
+data/processed/*.duckdb
+data/features/*.parquet
+
+# Modelos entrenados (pueden pesar mucho, se regeneran)
+models/*.pkl
+models/*.joblib
+
+# Datos crudos descargados (se regeneran con los scripts de ingesta)
+data/raw/xm/*.csv
+data/raw/ideam/*.csv
+data/raw/openmeteo/*.json
+
+# Variables de entorno y secretos - NUNCA subir esto
+.env
+*.env
+secrets.toml
+
+# VS Code
+.vscode/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
