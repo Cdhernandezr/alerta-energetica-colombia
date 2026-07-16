@@ -314,23 +314,100 @@ def consultar_resumen():
         except Exception:
             print(f"  {tabla:<25} tabla no existe aún")
     con.close()
+    
+def descargar_historico(
+    fecha_inicio: date,
+    fecha_fin: date,
+):
+    """
+    Descarga el histórico completo para todas las métricas.
+    Divide el rango en chunks de 30 días para respetar el límite de la API.
+    Guarda progreso en DuckDB a medida que avanza — si se interrumpe,
+    se puede retomar sin repetir lo ya descargado.
+    """
+    print(f"\n📥 Descarga histórica: {fecha_inicio} → {fecha_fin}")
+    total_dias = (fecha_fin - fecha_inicio).days
+    print(f"   Total: {total_dias} días por {len(METRICAS)} métricas\n")
+
+    for metrica_id, entidad, tabla, tipo in METRICAS:
+        print(f"\n{'═'*50}")
+        print(f"Métrica: {metrica_id} / {entidad} → {tabla}")
+
+        cursor = fecha_inicio
+        chunk_num = 0
+
+        while cursor <= fecha_fin:
+            fin_chunk = min(cursor + timedelta(days=29), fecha_fin)
+            chunk_num += 1
+
+            descargar_y_guardar(
+                metrica_id, entidad, tabla, tipo,
+                cursor, fin_chunk,
+            )
+
+            cursor = fin_chunk + timedelta(days=1)
+
+        print(f"✅ {metrica_id} completado")
+
+    consultar_resumen()
 
 
+def verificar_cobertura():
+    """
+    Verifica qué rango de fechas tenemos en cada tabla.
+    Útil para saber si la descarga histórica está completa
+    o si hay gaps que rellenar.
+    """
+    con = get_db_connection()
+    tablas = [
+        "demanda_sin", "precio_bolsa", "volumen_util",
+        "porcentaje_embalse", "aportes_energia", "aportes_caudal",
+    ]
+
+    print("\n📅 Cobertura de fechas por tabla:")
+    print(f"  {'Tabla':<25} {'Desde':<12} {'Hasta':<12} {'Registros':>10}")
+    print(f"  {'─'*25} {'─'*12} {'─'*12} {'─'*10}")
+
+    for tabla in tablas:
+        try:
+            row = con.execute(f"""
+                SELECT
+                    MIN(fecha)::VARCHAR   AS desde,
+                    MAX(fecha)::VARCHAR   AS hasta,
+                    COUNT(*)              AS registros
+                FROM {tabla}
+            """).fetchone()
+            print(f"  {tabla:<25} {row[0]:<12} {row[1]:<12} {row[2]:>10}")
+        except Exception:
+            print(f"  {tabla:<25} {'sin datos':<12}")
+
+    con.close()
+    
 if __name__ == "__main__":
-    print("🚀 Pipeline de ingesta XM — prueba con últimos 7 días\n")
+    import sys
 
     inicializar_tablas()
 
-    fecha_fin = date.today() - timedelta(days=1)
-    fecha_inicio = fecha_fin - timedelta(days=6)
+    # Modo 1: prueba rápida (últimos 7 días)
+    if len(sys.argv) == 1:
+        print("🚀 Modo prueba — últimos 7 días\n")
+        fecha_fin = date.today() - timedelta(days=2)
+        fecha_inicio = fecha_fin - timedelta(days=6)
+        for metrica_id, entidad, tabla, tipo in METRICAS:
+            print(f"\n{'─'*50}")
+            descargar_y_guardar(
+                metrica_id, entidad, tabla, tipo,
+                fecha_inicio, fecha_fin,
+            )
+        consultar_resumen()
 
-    print(f"Rango: {fecha_inicio} → {fecha_fin}\n")
+    # Modo 2: descarga histórica completa
+    elif sys.argv[1] == "historico":
+        fecha_inicio = date(2023, 1, 1)
+        fecha_fin = date.today() - timedelta(days=2)
+        descargar_historico(fecha_inicio, fecha_fin)
+        verificar_cobertura()
 
-    for metrica_id, entidad, tabla, tipo in METRICAS:
-        print(f"\n{'─'*50}")
-        descargar_y_guardar(
-            metrica_id, entidad, tabla, tipo,
-            fecha_inicio, fecha_fin,
-        )
-
-    consultar_resumen()
+    # Modo 3: verificar cobertura actual
+    elif sys.argv[1] == "cobertura":
+        verificar_cobertura()
