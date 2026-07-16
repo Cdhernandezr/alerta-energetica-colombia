@@ -100,3 +100,42 @@ de la descarga.
 timedelta(days=2)` como fecha fin para evitar datos incompletos.
 El script de validación de calidad debe detectar valores fuera
 del rango físicamente posible (< 100 TWh/día para DemaSIN).
+
+
+## 8. Anomalías de precio son eventos reales, no errores
+
+**Observación**: el script de validación detectó 306 horas con
+z-score > 4 en precio_bolsa.
+
+**Investigación**: las horas anómalas se concentran en oct-nov 2024,
+con precios de hasta 2,675 COP/kWh (z-score 5.92). El precio promedio
+de 2024 fue 676 COP/kWh vs 240 COP/kWh en 2025.
+
+**Conclusión**: son precios reales durante el pico de El Niño 2023-2024,
+cuando los embalses cayeron a niveles críticos y se activó generación
+térmica de emergencia.
+
+**Decisión**: NO eliminar estos registros. Son los eventos de mayor
+valor predictivo para el modelo — representan exactamente las crisis
+que el sistema de alerta debe anticipar.
+
+**Implicación para el modelo**: usar métricas robustas (MAE en vez de
+MSE) porque MSE penaliza desproporcionadamente estos picos extremos,
+lo que puede sesgar el modelo hacia minimizar el error en condiciones
+normales a costa de fallar en las crisis.
+
+## 9. Porcentaje de embalse puede superar 100%
+
+**Observación**: 30 registros con porcentaje > 1.0, principalmente
+embalse PRADO (hasta 1.22) y PLAYAS.
+
+**Causa**: los embalses reportan volumen útil incluyendo vertimientos
+— agua que entra en exceso sobre la capacidad nominal y rebosa.
+La API de XM reporta este exceso como porcentaje > 100%.
+
+**Decisión**: ajustar rango máximo válido a 1.20. Los 30 registros
+restantes con valores > 1.20 (PLAYAS llegó a 1.22) se investigan
+caso por caso en el EDA.
+
+**Implicación para el modelo**: no truncar estos valores a 1.0 porque
+perderíamos información real sobre el estado hídrico del sistema.
