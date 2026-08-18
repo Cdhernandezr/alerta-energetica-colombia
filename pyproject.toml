@@ -9,4 +9,5 @@ dependencies = [
     "jupyterlab>=4.6.0",
     "pandas<3.0.0",
     "pydataxm>=0.3.17",
+    "sodapy>=2.2.0",
 ]
