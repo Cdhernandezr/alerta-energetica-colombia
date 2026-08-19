@@ -139,3 +139,37 @@ caso por caso en el EDA.
 
 **Implicación para el modelo**: no truncar estos valores a 1.0 porque
 perderíamos información real sobre el estado hídrico del sistema.
+
+## 10. Open-Meteo sobre IDEAM/Socrata para datos climáticos
+
+**Evaluación de IDEAM vía Socrata (datos.gov.co):**
+- Timeouts frecuentes en queries de agregación sin filtros
+- Datos desactualizados en exploración (muestras de 2011-2018)
+- Granularidad de 10 minutos requiere agregación adicional
+- Inestabilidad incompatible con pipeline de producción
+
+**Decisión**: usar Open-Meteo como fuente principal de datos climáticos.
+
+**Ventajas de Open-Meteo:**
+- API REST sin autenticación ni throttling agresivo
+- Histórico desde 1940, pronóstico 16 días hacia adelante
+- Datos diarios pre-agregados (temperatura máx/mín/promedio,
+  precipitación acumulada)
+- Parámetros lat/lon — datos exactos en ubicación de cada embalse
+- 10,000 llamadas gratuitas por día
+
+**Implicación**: el sistema de alerta puede anticipar condiciones
+climáticas 16 días antes, no solo reaccionar a datos históricos.
+
+## 11. HTTP sobre HTTPS para Open-Meteo en desarrollo local (WSL)
+
+**Problema**: el firewall/antivirus de Windows intercepta conexiones
+SSL salientes de WSL, causando error OpenSSL unexpected eof.
+HTTP desde WSL funciona correctamente.
+
+**Decisión**: usar http:// en desarrollo local (WSL).
+En producción (Streamlit Cloud corre Linux sin ese firewall),
+usar https:// sin cambios adicionales.
+
+**Confirmado**: requests con HTTP trae datos reales de precipitación
+y temperatura en coordenadas de embalses colombianos.
