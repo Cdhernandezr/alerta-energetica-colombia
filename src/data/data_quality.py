@@ -12,11 +12,11 @@ problemas encontrados, no lanzan excepciones. Así el pipeline
 puede continuar y el analista decide qué hacer con cada problema.
 """
 
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+
 import duckdb
 import pandas as pd
-from pathlib import Path
-from datetime import date, timedelta
-
 
 ROOT = Path(__file__).resolve().parents[2]
 DB_PATH = ROOT / "data" / "processed" / "energia_colombia.duckdb"
@@ -146,7 +146,7 @@ def verificar_datos_recientes(dias_rezago: int = 3) -> pd.DataFrame:
     Retorna un resumen del estado de los últimos N días.
     """
     con = get_db_connection()
-    fecha_corte = date.today() - timedelta(days=dias_rezago)
+    fecha_corte = datetime.now(tz=UTC).date() - timedelta(days=dias_rezago)
 
     resultados = []
 

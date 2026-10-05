@@ -10,12 +10,13 @@ Aprendizajes de la inspección real de la API (pydataxm 0.3.17):
 - pandas>=3.0 rompe pydataxm (freq='M' eliminado) — usar pandas 2.x
 """
 
+import sys
+from datetime import UTC, date, datetime, timedelta
+from pathlib import Path
+
 import duckdb
 import pandas as pd
 from pydataxm.pydataxm import ReadDB
-from datetime import date, timedelta
-from pathlib import Path
-
 
 # ── Rutas ─────────────────────────────────────────────────────────────────────
 ROOT = Path(__file__).resolve().parents[2]
@@ -215,8 +216,11 @@ def descargar_metrica(
 
         return df
 
-    except Exception as e:
-        print(f"  ❌ Error: {e}")
+    except (ValueError, KeyError) as e:
+        print(f"  ❌ Error procesando respuesta: {e}")
+        return pd.DataFrame()
+    except RuntimeError as e:
+        print(f"  ❌ Error de API: {e}")
         return pd.DataFrame()
 
 
@@ -311,7 +315,7 @@ def consultar_resumen():
         try:
             n = con.execute(f"SELECT COUNT(*) FROM {tabla}").fetchone()[0]
             print(f"  {tabla:<25} {n:>8} registros")
-        except Exception:
+        except duckdb.Error:
             print(f"  {tabla:<25} tabla no existe aún")
     con.close()
     
@@ -378,20 +382,19 @@ def verificar_cobertura():
                 FROM {tabla}
             """).fetchone()
             print(f"  {tabla:<25} {row[0]:<12} {row[1]:<12} {row[2]:>10}")
-        except Exception:
+        except duckdb.Error:
             print(f"  {tabla:<25} {'sin datos':<12}")
 
     con.close()
     
 if __name__ == "__main__":
-    import sys
 
     inicializar_tablas()
 
     # Modo 1: prueba rápida (últimos 7 días)
     if len(sys.argv) == 1:
         print("🚀 Modo prueba — últimos 7 días\n")
-        fecha_fin = date.today() - timedelta(days=2)
+        fecha_fin = datetime.now(tz=UTC).date() - timedelta(days=2)
         fecha_inicio = fecha_fin - timedelta(days=6)
         for metrica_id, entidad, tabla, tipo in METRICAS:
             print(f"\n{'─'*50}")
@@ -404,7 +407,7 @@ if __name__ == "__main__":
     # Modo 2: descarga histórica completa
     elif sys.argv[1] == "historico":
         fecha_inicio = date(2023, 1, 1)
-        fecha_fin = date.today() - timedelta(days=2)
+        fecha_fin = datetime.now(tz=UTC).date() - timedelta(days=2)
         descargar_historico(fecha_inicio, fecha_fin)
         verificar_cobertura()
 

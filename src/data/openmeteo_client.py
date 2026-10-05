@@ -18,9 +18,8 @@ Embalses cubiertos:
 - Betania (Huila):         2.6333, -75.4167
 """
 
-import datetime as dt
 import sys
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
 
 import duckdb
@@ -277,7 +276,7 @@ if __name__ == "__main__":
 
     if len(sys.argv) == 1:
         print("Modo prueba: ultimos 30 dias + pronostico 16 dias\n")
-        fecha_fin = dt.datetime.now(tz=dt.UTC).date() - timedelta(days=1)
+        fecha_fin = datetime.now(tz=UTC).date() - timedelta(days=1)
         fecha_inicio = fecha_fin - timedelta(days=29)
         descargar_historico_completo(fecha_inicio, fecha_fin)
         descargar_pronostico_completo()
@@ -285,7 +284,7 @@ if __name__ == "__main__":
 
     elif sys.argv[1] == "historico":
         fecha_inicio = date(2023, 1, 1)
-        fecha_fin = dt.datetime.now(tz=dt.UTC).date() - timedelta(days=1)
+        fecha_fin = datetime.now(tz=UTC).date() - timedelta(days=1)
         descargar_historico_completo(fecha_inicio, fecha_fin)
         verificar_cobertura()
 

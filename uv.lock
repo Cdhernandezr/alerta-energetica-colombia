@@ -162,6 +162,7 @@ dependencies = [
     { name = "jupyterlab" },
     { name = "pandas" },
     { name = "pydataxm" },
+    { name = "requests" },
     { name = "sodapy" },
 ]
 
@@ -171,6 +172,7 @@ requires-dist = [
     { name = "jupyterlab", specifier = ">=4.6.0" },
     { name = "pandas", specifier = "<3.0.0" },
     { name = "pydataxm", specifier = ">=0.3.17" },
+    { name = "requests", specifier = ">=2.31.0" },
     { name = "sodapy", specifier = ">=2.2.0" },
 ]
 
