@@ -8,6 +8,7 @@ dependencies = [
     "duckdb>=1.5.4",
     "jupyterlab>=4.6.0",
     "pandas<3.0.0",
+    "plotly>=7.1.0",
     "pydataxm>=0.3.17",
     "requests>=2.31.0",
     "sodapy>=2.2.0",
